@@ -13,22 +13,6 @@ import ChatLayout from '@/components/layout/ChatLayout';
 type AuthView = 'login' | 'register';
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authView, setAuthView] = useState<AuthView>('login');
-
-  if (!isAuthenticated) {
-    return authView === 'login' ? (
-      <LoginPage
-        onSwitchToRegister={() => setAuthView('register')}
-        onLogin={() => setIsAuthenticated(true)}
-      />
-    ) : (
-      <RegisterPage
-        onSwitchToLogin={() => setAuthView('login')}
-        onRegister={() => setIsAuthenticated(true)}
-      />
-    );
-  }
 
   return <ChatLayout />;
 }

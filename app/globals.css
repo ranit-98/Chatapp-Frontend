@@ -1,26 +1,28 @@
-@import "tailwindcss";
+/* ─────────────────────────────────────────────────────────────
+   Global Styles – Minimal Reset (MUI CssBaseline handles most)
+   ───────────────────────────────────────────────────────────── */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+  overflow: hidden;
+  background: #0b0d17;
+  color-scheme: dark;
+}
+
+/* Smooth scrolling for scrollable areas */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Custom selection color */
+::selection {
+  background: rgba(108, 92, 231, 0.3);
+  color: #eaeaff;
 }
