@@ -8,29 +8,31 @@ export const cmsSideUrl = process.env.NEXT_PUBLIC_APP_CMS_SIDE_BASE_URL;
 // api doc => https://vishmo.dedicateddevelopers.us/apidoc
 
 export const mediaUrl = (url: string) => {
-  return `${baseUrlMedia}/${url}`;
+  if (!url) return '';
+  const sanitizedUrl = url.startsWith('/') ? url.slice(1) : url;
+  return `${baseUrlMedia}/${sanitizedUrl}`;
 };
 
-export type TAPIVersions = "v1";
+export type TAPIVersions = 'v1';
 
 export const endpoints = {
   auth: {
-    register: "/auth/register",
-    login: "/auth/login",
-    logout: "/auth/logout",
-    profileDetails: '/auth/me'
+    register: '/auth/register',
+    login: '/auth/login',
+    logout: '/auth/logout',
+    profileDetails: '/auth/me',
   },
   user: {
-    me: "/users/me",
-    updateProfile: "/users/profile",
-    list: "/users"
+    me: '/users/me',
+    updateProfile: '/users/profile',
+    list: '/users',
   },
   chat: {
-    conversations: "/chat/conversations",
+    conversations: '/chat/conversations',
     messages: (id: string) => `/chat/messages/${id}`,
-    initiate: "/chat/conversation",
-    upload: "/chat/upload"
-  }
+    initiate: '/chat/conversation',
+    upload: '/chat/upload',
+  },
 };
 
 export const successNotificationEndPoints = [

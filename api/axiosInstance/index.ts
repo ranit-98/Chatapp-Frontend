@@ -1,18 +1,18 @@
-import { BaseApiResponse } from "@/typescript/interfaces/common.interface";
+import { BaseApiResponse } from '@/typescript/interfaces/common.interface';
 import {
   globalCatchError,
   globalCatchSuccess,
-  globalCatchWarning
-} from "@/lib/functions/_helpers.lib";
-import axios, { AxiosError, AxiosResponse } from "axios";
-import { baseUrlApi, successNotificationEndPoints } from "../endpoints";
+  globalCatchWarning,
+} from '@/lib/functions/_helpers.lib';
+import axios, { AxiosError, AxiosResponse } from 'axios';
+import { baseUrlApi, successNotificationEndPoints } from '../endpoints';
 
 let abortController = new AbortController();
 let isHandlingServerError = false;
 
 const axiosInstance = axios.create({
   baseURL: baseUrlApi,
-  withCredentials: true
+  withCredentials: true,
 });
 
 axiosInstance.interceptors.request.use((config) => {
@@ -54,7 +54,7 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;

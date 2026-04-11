@@ -13,6 +13,5 @@ import ChatLayout from '@/components/layout/ChatLayout';
 type AuthView = 'login' | 'register';
 
 export default function Home() {
-
   return <ChatLayout />;
 }

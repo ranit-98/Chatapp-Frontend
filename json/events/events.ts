@@ -1,8 +1,8 @@
 const events = {
-  showNotification: "showNotification",
-  logoutCurrentUser: "logoutCurrentUser",
-  routerPush: "routerPush",
-  fetchAfterAddToFavourite: "fetchAfterAddToFavourite"
+  showNotification: 'showNotification',
+  logoutCurrentUser: 'logoutCurrentUser',
+  routerPush: 'routerPush',
+  fetchAfterAddToFavourite: 'fetchAfterAddToFavourite',
 };
 
 export default events;

@@ -1,12 +1,12 @@
-import axiosInstance from "../axiosInstance";
-import { endpoints } from "../endpoints";
+import axiosInstance from '../axiosInstance';
+import { endpoints } from '../endpoints';
 import {
   IAuthLoginParamType,
   IAuthLoginResponse,
   IAuthProfileDetailsResponse,
   IAuthRegisterParamType,
   IAuthRegisterResponse,
-} from "@/typescript/interfaces/auth.interface";
+} from '@/typescript/interfaces/auth.interface';
 
 /**
  * @param body Object {
@@ -17,10 +17,7 @@ import {
  * @returns AxiosResponse<IAuthRegisterResponse>
  */
 export const authRegisterFn = async (body: IAuthRegisterParamType) => {
-  const res = await axiosInstance.post<IAuthRegisterResponse>(
-    endpoints.auth.register,
-    body
-  );
+  const res = await axiosInstance.post<IAuthRegisterResponse>(endpoints.auth.register, body);
 
   return res;
 };
@@ -33,10 +30,7 @@ export const authRegisterFn = async (body: IAuthRegisterParamType) => {
  * @returns AxiosResponse<IAuthLoginResponse>
  */
 export const authLoginFn = async (body: IAuthLoginParamType) => {
-  const res = await axiosInstance.post<IAuthLoginResponse>(
-    endpoints.auth.login,
-    body
-  );
+  const res = await axiosInstance.post<IAuthLoginResponse>(endpoints.auth.login, body);
 
   return res;
 };
@@ -45,9 +39,7 @@ export const authLoginFn = async (body: IAuthLoginParamType) => {
  * @returns AxiosResponse<IAuthLoginResponse>
  */
 export const authLogoutFn = async () => {
-  const res = await axiosInstance.get<IAuthLoginResponse>(
-    endpoints.auth.logout
-  );
+  const res = await axiosInstance.get<IAuthLoginResponse>(endpoints.auth.logout);
 
   return res;
 };
@@ -56,9 +48,7 @@ export const authLogoutFn = async () => {
  * @returns AxiosResponse<IAuthProfileDetailsResponse>
  */
 export const authProfileDetailsFn = async () => {
-  const res = await axiosInstance.get<IAuthProfileDetailsResponse>(
-    endpoints.auth.profileDetails
-  );
+  const res = await axiosInstance.get<IAuthProfileDetailsResponse>(endpoints.auth.profileDetails);
 
   return res;
 };

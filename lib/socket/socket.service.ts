@@ -1,88 +1,24 @@
 // ─────────────────────────────────────────────────────────────
 //  SocketService – Professional Singleton Socket.IO Manager
-//  Features:
-//    • Auto-reconnect with exponential backoff
-//    • Emission queue – messages sent when offline are re-sent
-//      once the connection is restored
-//    • Fully typed emit/on methods via overloads
-//    • Clean listener management to prevent memory leaks
 // ─────────────────────────────────────────────────────────────
 
 import { io, Socket } from 'socket.io-client';
 import { SocketEvents } from './socket-events';
 import { baseUrl } from '@/api/endpoints';
 import type {
-    ChatMessage,
     SendMessagePayload,
-    TypingPayload,
-    JoinConversationPayload,
-    ReactPayload,
-    EditMessagePayload,
-    DeleteMessagePayload,
-    UserTypingEvent,
-    OnlineStatusPayload,
-    MessageDeletedEvent,
-    CallUserPayload,
-    AnswerCallPayload,
-    IceCandidatePayload,
-    EndCallPayload,
-    IncomingCallEvent,
-    CallAnsweredEvent,
-    IceCandidateEvent,
 } from '@/typescript/types/chat.types';
-
-// ── Event Map (emit + receive) ───────────────────────────────
-
-/** Maps each SocketEvent to its expected payload type for emit calls */
-export interface SocketEmitEvents {
-    [SocketEvents.JOIN_CONVERSATION]: JoinConversationPayload;
-    [SocketEvents.LEAVE_CONVERSATION]: JoinConversationPayload;
-    [SocketEvents.SEND_MESSAGE]: SendMessagePayload;
-    [SocketEvents.EDIT_MESSAGE]: EditMessagePayload;
-    [SocketEvents.DELETE_MESSAGE]: DeleteMessagePayload;
-    [SocketEvents.REACT]: ReactPayload;
-    [SocketEvents.TYPING]: TypingPayload;
-    [SocketEvents.CALL_USER]: CallUserPayload;
-    [SocketEvents.ANSWER_CALL]: AnswerCallPayload;
-    [SocketEvents.ICE_CANDIDATE]: IceCandidatePayload;
-    [SocketEvents.CALL_REJECTED]: EndCallPayload;
-    [SocketEvents.END_CALL]: EndCallPayload;
-}
-
-/** Maps each SocketEvent to its expected payload type for receive (on) calls */
-export interface SocketReceiveEvents {
-    [SocketEvents.NEW_MESSAGE]: ChatMessage;
-    [SocketEvents.MESSAGE_UPDATED]: ChatMessage;
-    [SocketEvents.MESSAGE_DELETED]: MessageDeletedEvent;
-    [SocketEvents.USER_TYPING]: UserTypingEvent;
-    [SocketEvents.ONLINE_STATUS]: OnlineStatusPayload;
-    [SocketEvents.INCOMING_CALL]: IncomingCallEvent;
-    [SocketEvents.CALL_ANSWERED]: CallAnsweredEvent;
-    [SocketEvents.ICE_CANDIDATE]: IceCandidateEvent;
-    [SocketEvents.CALL_REJECTED]: { from: string };
-    [SocketEvents.CALL_ENDED]: { from: string };
-    [SocketEvents.CONNECTION]: void;
-    [SocketEvents.DISCONNECT]: string;
-    [SocketEvents.ERROR]: Error;
-}
-
-// ── Queued emission type ─────────────────────────────────────
-
-interface QueuedEmission<K extends keyof SocketEmitEvents = keyof SocketEmitEvents> {
-    event: K;
-    data: SocketEmitEvents[K];
-}
-
-// ── SocketService Class ──────────────────────────────────────
+import type {
+    SocketEmitEvents,
+    SocketReceiveEvents,
+    QueuedEmission,
+    SocketListener,
+} from '@/typescript/interfaces/socket.interface';
 
 class SocketService {
     private socket: Socket | null = null;
     private emissionQueue: QueuedEmission[] = [];
-
-    /** Typed listener storage to prevent memory leaks */
-    private listeners = new Map<string, Set<(...args: unknown[]) => void>>();
-
-    // ── Connection ───────────────────────────────────────────
+    private listeners = new Map<keyof SocketReceiveEvents, Set<SocketListener<unknown>>>();
 
     public connect(options: { withCredentials?: boolean } = {}): void {
         if (this.socket?.connected) return;
@@ -124,52 +60,40 @@ class SocketService {
         return this.socket?.connected ?? false;
     }
 
-    // ── Typed Emit ───────────────────────────────────────────
-
     public emit<K extends keyof SocketEmitEvents>(event: K, data: SocketEmitEvents[K]): void {
         if (!this.socket?.connected) {
-            console.warn(`[Socket] ⏳ Queued emission (not connected): ${event}`);
             this.emissionQueue.push({ event, data } as QueuedEmission);
             return;
         }
         this.socket.emit(event, data);
     }
 
-    // ── Typed On/Off ─────────────────────────────────────────
-
     public on<K extends keyof SocketReceiveEvents>(
         event: K,
-        callback: (data: SocketReceiveEvents[K]) => void
+        callback: SocketListener<SocketReceiveEvents[K]>,
     ): void {
-        const key = event as string;
-        if (!this.listeners.has(key)) {
-            this.listeners.set(key, new Set());
+        if (!this.listeners.has(event)) {
+            this.listeners.set(event, new Set());
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const cb = callback as (...args: any[]) => void;
-        this.listeners.get(key)!.add(cb);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.socket?.on(key, cb as any);
+
+        const castedCallback = callback as SocketListener<unknown>;
+        this.listeners.get(event)!.add(castedCallback);
+        this.socket?.on(event as string, castedCallback);
     }
 
     public off<K extends keyof SocketReceiveEvents>(
         event: K,
-        callback?: (data: SocketReceiveEvents[K]) => void
+        callback?: SocketListener<SocketReceiveEvents[K]>,
     ): void {
-        const key = event as string;
         if (callback) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const cb = callback as (...args: any[]) => void;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            this.socket?.off(key, cb as any);
-            this.listeners.get(key)?.delete(cb);
+            const castedCallback = callback as SocketListener<unknown>;
+            this.socket?.off(event as string, castedCallback);
+            this.listeners.get(event)?.delete(castedCallback);
         } else {
-            this.socket?.off(key);
-            this.listeners.delete(key);
+            this.socket?.off(event as string);
+            this.listeners.delete(event);
         }
     }
-
-    // ── Convenience Methods ──────────────────────────────────
 
     public joinConversation(conversationId: string): void {
         this.emit(SocketEvents.JOIN_CONVERSATION, { conversationId });
@@ -199,35 +123,22 @@ class SocketService {
         this.emit(SocketEvents.DELETE_MESSAGE, { messageId });
     }
 
-    public getSocket(): Socket | null {
-        return this.socket;
-    }
-
-    // ── Private Helpers ──────────────────────────────────────
-
-    /** Flush queued emissions after reconnect */
     private flushQueue(): void {
         if (this.emissionQueue.length === 0) return;
-        console.info(`[Socket] Flushing ${this.emissionQueue.length} queued emissions`);
         const queue = [...this.emissionQueue];
         this.emissionQueue = [];
-        for (const { event, data } of queue) {
-            this.emit(event, data as SocketEmitEvents[typeof event]);
-        }
+        queue.forEach(({ event, data }) => this.emit(event, data));
     }
 
-    /** Re-attach existing listeners after reconnect (skips reserved events) */
     private reattachListeners(): void {
         const reservedEvents = new Set(['connect', 'disconnect', 'connect_error']);
         this.listeners.forEach((callbacks, event) => {
-            if (reservedEvents.has(event)) return;
-            callbacks.forEach(cb => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                this.socket?.on(event, cb as any);
+            if (reservedEvents.has(event as string)) return;
+            callbacks.forEach((cb) => {
+                this.socket?.on(event as string, cb);
             });
         });
     }
 }
 
-// Singleton export
 export const socketService = new SocketService();

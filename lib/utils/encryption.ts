@@ -10,12 +10,12 @@ const MASTER_SECRET = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || 'nexa-chat-v1-su
  * @returns The encrypted ciphertext
  */
 export const encryptMessage = (text: string, secret: string = MASTER_SECRET): string => {
-    try {
-        return CryptoJS.AES.encrypt(text, secret).toString();
-    } catch (error) {
-        console.error('Encryption failed:', error);
-        return text;
-    }
+  try {
+    return CryptoJS.AES.encrypt(text, secret).toString();
+  } catch (error) {
+    console.error('Encryption failed:', error);
+    return text;
+  }
 };
 
 /**
@@ -25,16 +25,17 @@ export const encryptMessage = (text: string, secret: string = MASTER_SECRET): st
  * @returns The decrypted plain text
  */
 export const decryptMessage = (ciphertext: string, secret: string = MASTER_SECRET): string => {
-    try {
-        // If it doesn't look like AES ciphertext, return as is
-        if (!ciphertext.includes('U2FsdGVkX1')) { // Common prefix for CryptoJS AES
-            return ciphertext;
-        }
-        const bytes = CryptoJS.AES.decrypt(ciphertext, secret);
-        const originalText = bytes.toString(CryptoJS.enc.Utf8);
-        return originalText || ciphertext;
-    } catch (error) {
-        // console.error('Decryption failed:', error);
-        return ciphertext;
+  try {
+    // If it doesn't look like AES ciphertext, return as is
+    if (!ciphertext.includes('U2FsdGVkX1')) {
+      // Common prefix for CryptoJS AES
+      return ciphertext;
     }
+    const bytes = CryptoJS.AES.decrypt(ciphertext, secret);
+    const originalText = bytes.toString(CryptoJS.enc.Utf8);
+    return originalText || ciphertext;
+  } catch (error) {
+    // console.error('Decryption failed:', error);
+    return ciphertext;
+  }
 };

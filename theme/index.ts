@@ -11,16 +11,16 @@ import { typography } from './typography';
 import { components } from './components';
 
 const theme = createTheme({
-    palette: {
-        mode: 'dark',
-        ...palette,
-    },
-    typography,
-    components,
-    shape: {
-        borderRadius: 12,
-    },
-    spacing: 8,
+  palette: {
+    mode: 'dark',
+    ...palette,
+  },
+  typography,
+  components,
+  shape: {
+    borderRadius: 12,
+  },
+  spacing: 8,
 });
 
 export default theme;

@@ -1,4 +1,4 @@
-import { ChangeEvent, JSX } from "react";
+import { ChangeEvent, JSX } from 'react';
 
 export enum HttpStatusCode {
   Continue = 100,
@@ -365,7 +365,7 @@ export enum HttpStatusCode {
    * Intended for use by intercepting proxies used to control access to the network (e.g., "captive portals" used
    * to require agreement to Terms of Service before granting full Internet access via a Wi-Fi hotspot).
    */
-  NetworkAuthenticationRequired = 511
+  NetworkAuthenticationRequired = 511,
 }
 
 export interface CommonMuiInputProps {
@@ -375,7 +375,7 @@ export interface CommonMuiInputProps {
   onChange?: () => void;
   helperText?: string;
   placeholder: string;
-  type?: "text" | "email" | "password" | "number" | "tel" | "file";
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'file';
   endAdornment?: JSX.Element;
   startAdornment?: JSX.Element;
 }
@@ -394,28 +394,18 @@ export interface IFormInput {
 
 export interface ButtonType {
   children: JSX.Element;
-  variant?: "text" | "outlined" | "contained";
+  variant?: 'text' | 'outlined' | 'contained';
   disabled?: boolean;
   onClick?: () => void;
-  color?:
-  | "inherit"
-  | "primary"
-  | "secondary"
-  | "success"
-  | "error"
-  | "info"
-  | "warning";
-  size?: "small" | "medium" | "large";
+  color?: 'inherit' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning';
+  size?: 'small' | 'medium' | 'large';
   fullWidth?: boolean;
-  type: "button" | "submit" | "reset";
+  type: 'button' | 'submit' | 'reset';
   endIcon?: JSX.Element;
   startIcon?: JSX.Element;
   loading?: boolean;
 }
-export type StatusCodes = `${Extract<
-  HttpStatusCode,
-  number
->}` extends `${infer N extends number}`
+export type StatusCodes = `${Extract<HttpStatusCode, number>}` extends `${infer N extends number}`
   ? N
   : never;
 export interface BaseApiResponse {

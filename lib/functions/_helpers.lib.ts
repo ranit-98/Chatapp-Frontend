@@ -1,23 +1,23 @@
-import events from "@/json/events/events";
-import eventEmitter from "@/services/event.emitter";
-import { ToastVariant } from "@/typescript/enums/helper/index.enum";
-import { BaseApiResponse } from "@/typescript/interfaces/common.interface";
-import { AxiosError, AxiosResponse } from "axios";
-import dayjs from "dayjs";
+import events from '@/json/events/events';
+import eventEmitter from '@/services/event.emitter';
+import { ToastVariant } from '@/typescript/enums/helper/index.enum';
+import { BaseApiResponse } from '@/typescript/interfaces/common.interface';
+import { AxiosError, AxiosResponse } from 'axios';
+import dayjs from 'dayjs';
 /**
  * Check if the window object exists.
  * @returns A function that checks if the window is undefined.
  */
 export function checkWindow() {
-  return typeof window !== "undefined";
+  return typeof window !== 'undefined';
 }
 
 export function isInServer() {
-  return typeof document === "undefined";
+  return typeof document === 'undefined';
 }
 
 export function isApple() {
-  if (typeof navigator === "undefined") {
+  if (typeof navigator === 'undefined') {
     return false;
   }
   const platformExpression = /Mac|iPhone|iPod|iPad/i;
@@ -27,7 +27,7 @@ export function isApple() {
 }
 
 export function isAppleSafari() {
-  if (typeof navigator === "undefined") {
+  if (typeof navigator === 'undefined') {
     return false;
   }
   const rejectedExpression = /Chrome|Android|CriOS|FxiOS|EdgiOS/i;
@@ -46,16 +46,14 @@ export function isAppleSafari() {
  * Global API Success message handler
  * @param response AxiosResponse<BaseApiResponse>
  */
-export const globalCatchSuccess = (
-  response: AxiosResponse<BaseApiResponse>
-) => {
-  let message = "Something went wrong";
+export const globalCatchSuccess = (response: AxiosResponse<BaseApiResponse>) => {
+  let message = 'Something went wrong';
   if (response?.data?.message) {
     message = response?.data.message;
   }
   eventEmitter.emit(events.showNotification, {
     message,
-    variant: ToastVariant.SUCCESS
+    variant: ToastVariant.SUCCESS,
   });
 };
 
@@ -64,17 +62,15 @@ export const globalCatchSuccess = (
  * Global API Warning message handler
  * @param response AxiosResponse<BaseApiResponse>
  */
-export const globalCatchWarning = (
-  response: AxiosResponse<BaseApiResponse>
-) => {
-  let message = "Something went wrong";
+export const globalCatchWarning = (response: AxiosResponse<BaseApiResponse>) => {
+  let message = 'Something went wrong';
   if (response?.data?.message) {
     message = response?.data.message;
   }
 
   eventEmitter.emit(events.showNotification, {
     message,
-    variant: ToastVariant.WARNING
+    variant: ToastVariant.WARNING,
   });
 };
 
@@ -84,24 +80,24 @@ export const globalCatchWarning = (
  * @param error AxiosError<BaseApiResponse>
  */
 export const globalCatchError = (error: AxiosError<BaseApiResponse>) => {
-  let message = "Something went wrong";
+  let message = 'Something went wrong';
   if (error.response?.data?.message) {
     message = error.response?.data.message;
   }
 
   eventEmitter.emit(events.showNotification, {
     message,
-    variant: ToastVariant.ERROR
+    variant: ToastVariant.ERROR,
   });
 };
 
 export const formatDate = (dateString?: string | number | Date) => {
-  if (!dateString) return "N/A";
+  if (!dateString) return 'N/A';
 
   const parsed = dayjs(dateString);
-  if (!parsed.isValid()) return "N/A";
+  if (!parsed.isValid()) return 'N/A';
 
-  return parsed.format("D MMM YYYY");
+  return parsed.format('D MMM YYYY');
 };
 
 export function formatDuration(minutes: number): string {
@@ -126,21 +122,20 @@ export const generateBufferTimeDropdown = (hours: number, interval: number) => {
   // Add 0 min option
   result.push({
     id: id++,
-    label: "0 min",
-    value: "0"
+    label: '0 min',
+    value: '0',
   });
 
   for (let minutes = interval; minutes <= hours * 60; minutes += interval) {
     const hrs = Math.floor(minutes / 60);
     const mins = minutes % 60;
 
-    const label =
-      hrs > 0 ? `${hrs}h${mins > 0 ? ` ${mins}min` : ""}` : `${mins}min`;
+    const label = hrs > 0 ? `${hrs}h${mins > 0 ? ` ${mins}min` : ''}` : `${mins}min`;
 
     result.push({
       id: id++,
       label,
-      value: String(minutes)
+      value: String(minutes),
     });
   }
 

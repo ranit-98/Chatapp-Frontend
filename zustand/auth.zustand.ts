@@ -1,4 +1,3 @@
-
 import { TLoginWithPasswordUser } from '@/typescript/types/authentication.type';
 import { createStore } from 'zustand-x';
 
@@ -16,7 +15,7 @@ export const authStore = createStore<AuthStore>(initialState, {
   name: 'authStore',
   persist: true,
   mutative: true,
-}).extendActions(api => ({
+}).extendActions((api) => ({
   setIsLoggedIn: (isLoggedIn: boolean) => {
     api.set('isLoggedIn', isLoggedIn);
   },

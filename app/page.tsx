@@ -1,34 +1,29 @@
-// ─────────────────────────────────────────────────────────────
-//  Home Page – App Entry Point with Auth Flow
-//  Routes between Auth screens and Chat Layout.
-// ─────────────────────────────────────────────────────────────
-
 'use client';
 
-import { useState } from 'react';
-import LoginPage from '@/components/auth/LoginPage';
-import RegisterPage from '@/components/auth/RegisterPage';
-import ChatLayout from '@/components/layout/ChatLayout';
-
-type AuthView = 'login' | 'register';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { CircularProgress, Box } from '@mui/material';
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authView, setAuthView] = useState<AuthView>('login');
+  const router = useRouter();
 
-  if (!isAuthenticated) {
-    return authView === 'login' ? (
-      <LoginPage
-        onSwitchToRegister={() => setAuthView('register')}
-        onLogin={() => setIsAuthenticated(true)}
-      />
-    ) : (
-      <RegisterPage
-        onSwitchToLogin={() => setAuthView('login')}
-        onRegister={() => setIsAuthenticated(true)}
-      />
-    );
-  }
+  useEffect(() => {
+    // The middleware will handle redirects based on 'access_token' cookie.
+    // This is a fallback to ensure we land on login if not redirected.
+    router.replace('/login');
+  }, [router]);
 
-  return <ChatLayout />;
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        height: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#0B0D17',
+      }}
+    >
+      <CircularProgress color="primary" />
+    </Box>
+  );
 }
