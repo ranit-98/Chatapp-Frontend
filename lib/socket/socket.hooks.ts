@@ -65,29 +65,64 @@ export function usePresence() {
         SocketEvents.ONLINE_STATUS,
         useCallback(
             (event: OnlineStatusPayload) => {
-                queryClient.setQueriesData({ queryKey: ['user-list'] }, (old: any) => {
+                const affectedIds = (event.userIds || (event.userId ? [event.userId] : [])).map(id => String(id));
+                if (affectedIds.length === 0) return;
+
+                console.debug(`[Presence] 📡 Processing ${event.status} status for:`, affectedIds);
+
+                // 1. Update Current User
+                queryClient.setQueriesData({ queryKey: ['user-me'] }, (old: any) => {
                     if (!old) return old;
-                    return old.map((user: any) =>
-                        user._id === event.userId ? { ...user, status: event.status } : user,
-                    );
+                    const oldId = String(old._id || old.id || '');
+                    if (affectedIds.includes(oldId)) {
+                        console.debug(`[Presence] ✅ Updated 'user-me' status to ${event.status}`);
+                        return { ...old, status: event.status };
+                    }
+                    return old;
                 });
 
+                // 2. Update User List
+                queryClient.setQueriesData({ queryKey: ['user-list'] }, (old: any) => {
+                    if (!old) return old;
+                    let updated = false;
+                    const next = old.map((user: any) => {
+                        const uId = String(user._id || user.id || '');
+                        if (affectedIds.includes(uId)) {
+                            updated = true;
+                            return { ...user, status: event.status };
+                        }
+                        return user;
+                    });
+                    if (updated) console.debug(`[Presence] ✅ Updated ${affectedIds.length} users in 'user-list'`);
+                    return next;
+                });
+
+                // 3. Update Conversations
                 queryClient.setQueriesData(
                     { queryKey: ['conversations'] },
                     (old: Conversation[] | undefined) => {
                         if (!old) return old;
                         return old.map((conv) => {
+                            let convUpdated = false;
                             const updatedParticipants = conv.participants?.map((p) => {
-                                const pId = typeof p === 'string' ? p : p._id;
-                                if (pId === event.userId) {
+                                const pId = String(typeof p === 'string' ? p : p._id || (p as any).id || '');
+                                if (affectedIds.includes(pId)) {
+                                    convUpdated = true;
                                     return typeof p === 'string' ? p : { ...p, status: event.status };
                                 }
                                 return p;
                             });
-                            return { ...conv, participants: updatedParticipants };
+                            return convUpdated ? { ...conv, participants: updatedParticipants } : conv;
                         });
                     },
                 );
+
+                // 4. Fallback: Invalidate to ensure consistency
+                // We use a slight delay to allow the manual cache updates to settle
+                setTimeout(() => {
+                    queryClient.invalidateQueries({ queryKey: ['user-list'], refetchType: 'none' });
+                    queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
+                }, 100);
             },
             [queryClient],
         ),

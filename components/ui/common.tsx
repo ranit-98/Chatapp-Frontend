@@ -73,6 +73,9 @@ export const EncryptionTag = styled(Box)(() => ({
 }));
 
 export const ScrollBar = styled(Box)({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
   overflowY: 'auto',
   '&::-webkit-scrollbar': {
     width: '6px',

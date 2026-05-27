@@ -6,6 +6,7 @@ export type UserStatus = 'online' | 'offline' | 'away';
 
 export interface ChatUser {
   _id: string;
+  id?: string;
   name: string;
   email: string;
   avatar?: string;
@@ -62,7 +63,8 @@ export interface UserTypingEvent {
 }
 
 export interface OnlineStatusPayload {
-  userId: string;
+  userId?: string;
+  userIds?: string[];
   status: 'online' | 'offline';
 }
 
@@ -113,6 +115,8 @@ export interface IncomingCallEvent {
   from: string;
   offer: RTCSessionDescriptionInit;
   type: 'audio' | 'video';
+  callerName?: string;
+  callerAvatar?: string;
 }
 
 export interface CallAnsweredEvent {

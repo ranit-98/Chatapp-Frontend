@@ -5,13 +5,13 @@
 
 'use client';
 
-import { useState } from 'react';
-import LoginPage from '@/components/auth/LoginPage';
-import RegisterPage from '@/components/auth/RegisterPage';
 import ChatLayout from '@/components/layout/ChatLayout';
-
-type AuthView = 'login' | 'register';
+import { CallProvider } from '@/lib/webrtc/CallContext';
 
 export default function Home() {
-  return <ChatLayout />;
+  return (
+    <CallProvider>
+      <ChatLayout />
+    </CallProvider>
+  );
 }

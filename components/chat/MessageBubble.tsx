@@ -23,6 +23,7 @@ import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRound
 import ReplyIcon from '@mui/icons-material/Reply';
 import EmojiPicker, { Theme as EmojiTheme, EmojiClickData } from 'emoji-picker-react';
 import { mediaUrl } from '@/api/endpoints';
+import { decryptMessage } from '@/lib/utils/encryption';
 import type { ChatMessage, ChatUser } from '@/typescript/types/chat.types';
 import {
   MessageRow,
@@ -48,15 +49,20 @@ interface MessageBubbleProps {
 
 // ── Helpers ──────────────────────────────────────────────────
 
-function getSenderName(sender: ChatUser | string): string {
-  if (typeof sender === 'string') return '';
+function getSenderName(sender?: ChatUser | string): string {
+  if (!sender || typeof sender === 'string') return '';
   return sender.name ?? '';
 }
 
-function getSenderAvatar(sender: ChatUser | string): string | undefined {
-  if (typeof sender === 'string') return undefined;
+function getSenderAvatar(sender?: ChatUser | string): string | undefined {
+  if (!sender || typeof sender === 'string') return undefined;
   const avatar = sender.avatar ?? sender.profile_image;
   return avatar ? (avatar.startsWith('http') ? avatar : mediaUrl(avatar)) : undefined;
+}
+
+function getReplyPreview(message: ChatMessage): string {
+  if (message.type !== 'text') return `📎 ${message.type}`;
+  return decryptMessage(message.content);
 }
 
 function formatTime(iso: string): string {
@@ -332,7 +338,7 @@ export default function MessageBubble({
                 maxWidth: 220,
               }}
             >
-              {repliedMsg.type !== 'text' ? `📎 ${repliedMsg.type}` : repliedMsg.content}
+              {getReplyPreview(repliedMsg)}
             </Typography>
           </ReplyContainer>
         )}

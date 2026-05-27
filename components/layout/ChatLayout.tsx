@@ -18,8 +18,11 @@ import ProfilePanel from '@/components/profile/ProfilePanel';
 import SettingsPanel from '@/components/settings/SettingsPanel';
 import { useGetMe } from '@/api/hooks/useUser.hook';
 import { useGetConversations } from '@/api/hooks/useChat.hook';
-import { useSocketConnection, usePresence } from '@/lib/socket/socket.hooks';
+import { useSocketConnection } from '@/lib/socket/socket.hooks';
 import type { Conversation } from '@/typescript/types/chat.types';
+import CallInterface from '@/components/calls/CallInterface';
+import IncomingCallModal from '@/components/calls/IncomingCallModal';
+import CallDebug from '@/components/calls/CallDebug';
 
 // ── Types ───────────────────────────────────────────────────
 
@@ -42,6 +45,7 @@ const LayoutRoot = styled(Box)(({ theme }) => ({
 export default function ChatLayout() {
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.down('md'));
+  const isConnected = useSocketConnection();
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<NavSection>('chats');
   const [activeConversationId, setActiveConversationId] = useState<string>('');
@@ -49,11 +53,6 @@ export default function ChatLayout() {
   useEffect(() => {
     setIsMobile(matches);
   }, [matches]);
-
-  // Manages global socket connection lifecycle
-  useSocketConnection();
-  // Global presence sync (online/offline)
-  usePresence();
 
   // Fetch real data
   const { data: userData } = useGetMe();
@@ -85,26 +84,41 @@ export default function ChatLayout() {
     }
   };
 
-  // On mobile, if we have a conversation selected, we show only that.
-  if (isMobile && selectedConversation) {
-    return (
-      <LayoutRoot>
-        <ChatArea conversation={selectedConversation} onBack={() => setActiveConversationId('')} />
-      </LayoutRoot>
-    );
-  }
-
   return (
     <LayoutRoot>
-      {!isMobile && (
+      {/* Sidebar & Navigation */}
+      {(!isMobile || !selectedConversation) && (
+        <>
+          {!isMobile && (
+            <NavigationRail activeSection={activeSection} onSectionChange={setActiveSection} />
+          )}
+          <Box sx={{ position: 'fixed', bottom: 10, right: 10, zIndex: 9999 }}>
+            <Box sx={{
+              width: 12, height: 12, borderRadius: '50%',
+              background: isConnected ? '#2ECC71' : '#E74C3C',
+              boxShadow: isConnected ? '0 0 10px #2ECC71' : '0 0 10px #E74C3C'
+            }} />
+          </Box>
+          {renderSidePanel()}
+        </>
+      )}
+
+      {/* Main Chat Area */}
+      {selectedConversation ? (
+        <ChatArea conversation={selectedConversation} onBack={() => setActiveConversationId('')} />
+      ) : (
+        !isMobile && <EmptyState />
+      )}
+
+      {/* Bottom Navigation for Mobile */}
+      {isMobile && !selectedConversation && (
         <NavigationRail activeSection={activeSection} onSectionChange={setActiveSection} />
       )}
-      {renderSidePanel()}
-      {!isMobile &&
-        (selectedConversation ? <ChatArea conversation={selectedConversation} /> : <EmptyState />)}
-      {isMobile && (
-        <NavigationRail activeSection={activeSection} onSectionChange={setActiveSection} />
-      )}
+
+      {/* Global Overlays */}
+      <CallInterface />
+      <IncomingCallModal />
+      <CallDebug />
     </LayoutRoot>
   );
 }

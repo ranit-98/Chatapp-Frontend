@@ -26,6 +26,9 @@ import StatusBadge from '@/components/common/StatusBadge';
 import { useUserList } from '@/api/hooks/useUser.hook';
 import { useInitiateConversation } from '@/api/hooks/useChat.hook';
 import { decryptMessage } from '@/lib/utils/encryption';
+import { getOtherParticipant, getUserId } from '@/lib/users/user-id';
+import type { Conversation, ChatMessage, ChatUser } from '@/typescript/types/chat.types';
+import type { TLoginWithPasswordUser } from '@/typescript/types/authentication.type';
 
 import {
   SidePanelRoot,
@@ -43,9 +46,23 @@ import {
 interface ConversationListProps {
   activeConversationId: string;
   onConversationSelect: (id: string) => void;
-  conversations: any[];
+  conversations: ConversationItem[];
   isLoading: boolean;
 }
+
+type ConversationItem = Omit<Conversation, 'lastMessage'> & {
+  id?: string;
+  lastMessage?: string | ChatMessage;
+};
+
+type InitiateConversationResponse = {
+  data: {
+    data: {
+      _id?: string;
+      id?: string;
+    };
+  };
+};
 
 // ── Constants ───────────────────────────────────────────────
 
@@ -77,31 +94,38 @@ export default function ConversationList({
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserList, setShowUserList] = useState(false);
-  const me = authStore.useStore((s) => s.userData);
+  const me = authStore.useStore((s) => s.userData as TLoginWithPasswordUser | null);
 
-  const { data: users = [], isLoading: isUsersLoading } = useUserList();
+  const { data: users = [], isLoading: isUsersLoading } = useUserList() as {
+    data?: ChatUser[];
+    isLoading: boolean;
+  };
   const { mutate: initiateChat, isPending: isInitiating } = useInitiateConversation();
 
-  const filterConversations = (convs: any[]) =>
+  const filterConversations = (convs: ConversationItem[]) =>
     convs.filter((c) => {
-      const otherUser = c.participants.find((p: any) => p._id !== me?._id);
+      const otherUser = getOtherParticipant(c.participants, me);
       return otherUser?.name?.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
   const handleStartChat = (userId: string) => {
     initiateChat(userId, {
-      onSuccess: (res: any) => {
+      onSuccess: (res: InitiateConversationResponse) => {
         const convId = res.data.data._id || res.data.data.id;
+        if (!convId) return;
         onConversationSelect(convId);
         setShowUserList(false);
       },
     });
   };
 
-  const renderConversation = (conv: any, index: number) => {
+  const renderConversation = (conv: ConversationItem, index: number) => {
     const id = conv._id || conv.id;
-    const otherUser = conv.participants.find((p: any) => p._id !== me?._id) || conv.participants[0];
+    if (!id) return null;
+
+    const otherUser = getOtherParticipant(conv.participants, me) || conv.participants[0];
     const isActive = activeConversationId === id;
+    const unreadCount = conv.unreadCount ?? 0;
 
     const rawLastMsg =
       typeof conv.lastMessage === 'string' ? conv.lastMessage : conv.lastMessage?.content;
@@ -111,7 +135,7 @@ export default function ConversationList({
     if (rawLastMsg && lastMsgType === 'text') {
       try {
         lastMsgDisplay = decryptMessage(rawLastMsg);
-      } catch (e) {
+      } catch {
         lastMsgDisplay = rawLastMsg;
       }
     } else if (rawLastMsg && lastMsgType !== 'text') {
@@ -138,7 +162,7 @@ export default function ConversationList({
           <FlexBetween sx={{ mb: 0.3 }}>
             <Typography
               variant="subtitle2"
-              fontWeight={conv.unreadCount > 0 ? 700 : 500}
+              fontWeight={unreadCount > 0 ? 700 : 500}
               noWrap
               sx={{ maxWidth: '70%' }}
             >
@@ -167,9 +191,9 @@ export default function ConversationList({
             >
               {lastMsgDisplay}
             </Typography>
-            {conv.unreadCount > 0 && (
+            {unreadCount > 0 && (
               <Chip
-                label={conv.unreadCount}
+                label={unreadCount}
                 size="small"
                 sx={{
                   height: 18,
@@ -243,11 +267,11 @@ export default function ConversationList({
             </FlexCenter>
           ) : (
             <List>
-              {users.map((user: any) => (
-                <ListItem key={user._id} disablePadding sx={{ mb: 1 }}>
+              {users.map((user) => (
+                <ListItem key={getUserId(user)} disablePadding sx={{ mb: 1 }}>
                   <ListItemButton
                     disabled={isInitiating}
-                    onClick={() => handleStartChat(user._id)}
+                    onClick={() => handleStartChat(getUserId(user))}
                     sx={{ borderRadius: 2, '&:hover': { background: 'rgba(255,255,255,0.03)' } }}
                   >
                     <ListItemAvatar>

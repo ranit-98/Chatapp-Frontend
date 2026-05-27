@@ -25,6 +25,7 @@ import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRound
 import EmojiPicker, { Theme as EmojiTheme, EmojiClickData } from 'emoji-picker-react';
 import { extendedPalette } from '@/theme';
 import { uploadChatFileFn } from '@/api/functions/chat.api';
+import { decryptMessage } from '@/lib/utils/encryption';
 import {
   InputRoot,
   ComposerWrapper,
@@ -50,6 +51,11 @@ interface MessageInputProps {
 }
 
 // ── Component ────────────────────────────────────────────────
+
+function getReplyPreview(message: ChatMessage): string {
+  if (message.type !== 'text') return `📎 ${message.type}`;
+  return decryptMessage(message.content);
+}
 
 export default function MessageInput({
   onSend,
@@ -114,7 +120,7 @@ export default function MessageInput({
         if (url) {
           onSend(url, attachment.type, replyTo?._id);
           setAttachment(null);
-          setMessage(''); // Clear any text draft too
+          setMessage('');
           onTyping(false);
         }
       } catch (err) {
@@ -245,7 +251,7 @@ export default function MessageInput({
                   textOverflow: 'ellipsis',
                 }}
               >
-                {replyTo.type !== 'text' ? `📎 ${replyTo.type}` : replyTo.content}
+                {getReplyPreview(replyTo)}
               </Typography>
             </Box>
           </Box>

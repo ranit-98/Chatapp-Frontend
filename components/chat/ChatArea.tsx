@@ -7,7 +7,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
 import CircularProgress from '@mui/material/CircularProgress';
 import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import ChatHeader from './ChatHeader';
@@ -17,7 +16,9 @@ import { useConversation } from '@/lib/socket/socket.hooks';
 import { useGetMessages } from '@/api/hooks/useChat.hook';
 import { authStore } from '@/zustand/auth.zustand';
 import { decryptMessage } from '@/lib/utils/encryption';
+import { getUserId } from '@/lib/users/user-id';
 import type { Conversation, ChatMessage } from '@/typescript/types/chat.types';
+import type { TLoginWithPasswordUser } from '@/typescript/types/authentication.type';
 import { ChatViewRoot, ScrollBar, FlexCenter } from '@/components/ui';
 import { styled } from '@mui/material/styles';
 
@@ -33,14 +34,6 @@ const EncryptionBadge = styled(Box)(() => ({
   border: '1px solid rgba(108, 92, 231, 0.1)',
   marginBottom: 24,
   marginInline: 'auto',
-}));
-
-const DateDivider = styled(Box)(() => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 16,
-  marginBottom: 24,
-  paddingInline: 32,
 }));
 
 const TypingIndicatorWrapper = styled(Box)(() => ({
@@ -79,8 +72,7 @@ const TypingDot = styled(Box, {
 
 function getSenderId(message: ChatMessage): string {
   if (!message.sender) return '';
-  if (typeof message.sender === 'string') return message.sender;
-  return message.sender._id;
+  return getUserId(message.sender);
 }
 
 // ── Component ────────────────────────────────────────────────
@@ -93,7 +85,7 @@ export default function ChatArea({
   onBack?: () => void;
 }) {
   const convId = conversation._id;
-  const me = authStore.useStore((s: any) => s.userData);
+  const me = authStore.useStore((s) => s.userData as TLoginWithPasswordUser | null);
 
   const { data: initialMessages = [], isLoading: isHistoryLoading } = useGetMessages(convId);
 
@@ -208,7 +200,7 @@ export default function ChatArea({
                   No messages yet
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  Start the conversation with a friendly "Hello!"
+                  Start the conversation with a friendly &quot;Hello!&quot;
                 </Typography>
               </Box>
             )}
@@ -218,7 +210,7 @@ export default function ChatArea({
                 <MessageBubble
                   key={msg._id}
                   message={{ ...msg, content: msg.displayContent }}
-                  isOwn={getSenderId(msg) === me?._id}
+                  isOwn={getSenderId(msg) === getUserId(me)}
                   onReply={setReplyTo}
                   onReact={reactToMessage}
                   onDelete={deleteMessage}

@@ -1,6 +1,5 @@
 'use client';
 
-import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
@@ -14,11 +13,15 @@ import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { authStore } from '@/zustand/auth.zustand';
 import StatusBadge from '@/components/common/StatusBadge';
 import { MainHeaderWrapper } from '@/components/ui';
+import { useCall } from '@/lib/webrtc/CallContext';
+import { getOtherParticipant, getUserId } from '@/lib/users/user-id';
+import type { Conversation } from '@/typescript/types/chat.types';
+import type { TLoginWithPasswordUser } from '@/typescript/types/authentication.type';
 
 // ── Props ───────────────────────────────────────────────────
 
 interface ChatHeaderProps {
-  conversation: any;
+  conversation: Conversation & { isTyping?: boolean };
   onBack?: () => void;
 }
 
@@ -34,11 +37,21 @@ const getInitials = (name: string) =>
 // ── Component ───────────────────────────────────────────────
 
 export default function ChatHeader({ conversation, onBack }: ChatHeaderProps) {
-  const me = authStore.useStore((s: any) => s.userData);
+  const { initiateCall } = useCall();
+  const me = authStore.useStore((s) => s.userData as TLoginWithPasswordUser | null);
   const otherUser =
-    conversation.participants?.find((p: any) => p._id !== me?._id) ||
-    conversation.participants?.[0] ||
-    {};
+    getOtherParticipant(conversation.participants, me) || conversation.participants?.[0] || {};
+  const otherUserId = getUserId(otherUser);
+
+  const handleVoiceCall = () => {
+    console.info('[ChatHeader] Initiating voice call to:', otherUser.name, otherUserId);
+    if (otherUserId) initiateCall(otherUser, 'audio');
+  };
+
+  const handleVideoCall = () => {
+    console.info('[ChatHeader] Initiating video call to:', otherUser.name, otherUserId);
+    if (otherUserId) initiateCall(otherUser, 'video');
+  };
 
   return (
     <MainHeaderWrapper>
@@ -93,6 +106,7 @@ export default function ChatHeader({ conversation, onBack }: ChatHeaderProps) {
         </Tooltip>
         <Tooltip title="Voice Call">
           <IconButton
+            onClick={handleVoiceCall}
             sx={{
               color: 'text.secondary',
               '&:hover': { color: 'secondary.main', background: 'rgba(0, 206, 201, 0.1)' },
@@ -103,6 +117,7 @@ export default function ChatHeader({ conversation, onBack }: ChatHeaderProps) {
         </Tooltip>
         <Tooltip title="Video Call">
           <IconButton
+            onClick={handleVideoCall}
             sx={{
               color: 'text.secondary',
               '&:hover': { color: 'primary.main', background: 'rgba(108, 92, 231, 0.1)' },

@@ -39,7 +39,7 @@ export const authLoginFn = async (body: IAuthLoginParamType) => {
  * @returns AxiosResponse<IAuthLoginResponse>
  */
 export const authLogoutFn = async () => {
-  const res = await axiosInstance.get<IAuthLoginResponse>(endpoints.auth.logout);
+  const res = await axiosInstance.post<IAuthLoginResponse>(endpoints.auth.logout);
 
   return res;
 };

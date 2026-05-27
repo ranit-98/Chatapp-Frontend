@@ -7,6 +7,10 @@ import { SocketEvents } from './socket-events';
 import { baseUrl } from '@/api/endpoints';
 import type {
     SendMessagePayload,
+    CallUserPayload,
+    AnswerCallPayload,
+    IceCandidatePayload,
+    EndCallPayload,
 } from '@/typescript/types/chat.types';
 import type {
     SocketEmitEvents,
@@ -21,13 +25,17 @@ class SocketService {
     private listeners = new Map<keyof SocketReceiveEvents, Set<SocketListener<unknown>>>();
 
     public connect(options: { withCredentials?: boolean } = {}): void {
-        if (this.socket?.connected) return;
+        // Guard against both connected AND connecting sockets to prevent duplicate instances
+        if (this.socket) {
+            console.debug('[Socket] Socket instance already exists, skipping connect. Connected:', this.socket.connected);
+            return;
+        }
 
         const socketUrl = (baseUrl ?? '').replace('/api', '');
+        console.info(`🔌 [Socket] Connecting to: ${socketUrl} | BaseUrl: ${baseUrl}`);
 
         this.socket = io(socketUrl, {
             withCredentials: options.withCredentials ?? true,
-            transports: ['websocket'],
             autoConnect: true,
             reconnection: true,
             reconnectionAttempts: Infinity,
@@ -47,6 +55,11 @@ class SocketService {
 
         this.socket.on('connect_error', (error: Error) => {
             console.warn('[Socket] ⚠️ Connection error:', error.message);
+        });
+
+        // Debug: Log all incoming events
+        this.socket.onAny((event, ...args) => {
+            console.debug(`📡 [Socket RX] ${event}:`, args);
         });
     }
 
@@ -130,14 +143,41 @@ class SocketService {
         queue.forEach(({ event, data }) => this.emit(event, data));
     }
 
+    // --- WebRTC Signaling ---
+
+    public callUser(payload: CallUserPayload): void {
+        this.emit(SocketEvents.CALL_USER, payload);
+    }
+
+    public answerCall(payload: AnswerCallPayload): void {
+        this.emit(SocketEvents.ANSWER_CALL, payload);
+    }
+
+    public sendIceCandidate(payload: IceCandidatePayload): void {
+        this.emit(SocketEvents.ICE_CANDIDATE, payload);
+    }
+
+    public rejectCall(payload: EndCallPayload): void {
+        this.emit(SocketEvents.CALL_REJECTED, payload);
+    }
+
+    public endCall(payload: EndCallPayload): void {
+        this.emit(SocketEvents.END_CALL, payload);
+    }
+
     private reattachListeners(): void {
         const reservedEvents = new Set(['connect', 'disconnect', 'connect_error']);
         this.listeners.forEach((callbacks, event) => {
             if (reservedEvents.has(event as string)) return;
+
+            // Clear existing listeners for this event to avoid duplicates during reconnection
+            this.socket?.removeAllListeners(event as string);
+
             callbacks.forEach((cb) => {
                 this.socket?.on(event as string, cb);
             });
         });
+        console.debug(`[Socket] Reattached listeners for ${this.listeners.size} events`);
     }
 }
 
